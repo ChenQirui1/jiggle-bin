@@ -1,0 +1,9 @@
+data/
+*.jpg/
+logs/
+results/
+results_old/
+weights/
+manual_test_images/
+
+
