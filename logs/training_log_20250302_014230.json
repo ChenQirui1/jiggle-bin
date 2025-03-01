@@ -1,0 +1,13 @@
+{
+    "training_info": {
+        "started_at": "20250302_014230",
+        "model": "ResNet50",
+        "batch_size": 32,
+        "epochs": 100,
+        "optimizer": "Adam",
+        "learning_rate": 0.001,
+        "total_time_seconds": 28.20907998085022,
+        "completed_at": "20250302_014259"
+    },
+    "epochs": []
+}
