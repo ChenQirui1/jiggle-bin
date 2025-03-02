@@ -117,6 +117,67 @@ def visualize_prediction(image, prediction, probability, output_path=None):
 
     plt.show()
 
+def inference(image_path, model_path, gpu = None, output = "results"):
+    device = torch.device("cuda" if torch.cuda.is_available() and gpu else "cpu")
+    print(f"Using device: {device}")
+    
+    # Load model
+    try:
+        model = load_model(model_path)
+        print(f"Model loaded successfully from {model_path}")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        return
+    
+    
+        # Get image paths
+    image_paths = []
+    if image_path:
+        if os.path.exists(image_path):
+            image_paths.append(image_path)
+        else:
+            print(f"Image not found: {image_path}")
+            return
+    else:
+        print("Please provide either image_path argument")
+        return
+    
+    # Create output directory if it doesn't exist
+    if output:
+        os.makedirs(output, exist_ok=True)
+        
+        # Process each image
+    for i, image_path in enumerate(image_paths):
+        try:
+            print(f"Processing image: {image_path}")
+
+            # Preprocess image
+            image_tensor, original_image = preprocess_image(image_path)
+
+            # Run inference
+            prediction, probability = predict(model, image_tensor, device)
+
+            # Display results
+            print(
+                f"Prediction: Class {int(prediction)} with confidence {probability:.4f}"
+            )
+
+            # Save visualization
+            if output:
+                filename = os.path.basename(image_path)
+                output_path = os.path.join(output, f"result_{filename}")
+                visualize_prediction(
+                    original_image, prediction, probability, output_path
+                )
+            else:
+                visualize_prediction(original_image, prediction, probability)
+
+            print("-" * 50)
+        except Exception as e:
+            print(f"Error processing {image_path}: {e}")
+
+    print("Inference completed!")
+    
 
 def main():
     parser = argparse.ArgumentParser(
