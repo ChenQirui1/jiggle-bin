@@ -268,6 +268,8 @@ def main():
 
     print("Inference completed!")
 
+def import_test():
+    return True
 
 if __name__ == "__main__":
     main()
