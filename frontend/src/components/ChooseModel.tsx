@@ -19,18 +19,18 @@ const categories = [
     id: "general",
     label: "General",
   },
-  {
-    id: "recyclable",
-    label: "Recyclable",
-  },
-  {
-    id: "paper",
-    label: "Paper",
-  },
-  {
-    id: "plastic",
-    label: "Plastic",
-  },
+  // {
+  //   id: "recyclable",
+  //   label: "Recyclable",
+  // },
+  // {
+  //   id: "paper",
+  //   label: "Paper",
+  // },
+  // {
+  //   id: "plastic",
+  //   label: "Plastic",
+  // },
 ];
 
 type CardProps = React.ComponentProps<typeof Card> & {

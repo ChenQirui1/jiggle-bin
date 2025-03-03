@@ -14,8 +14,8 @@ type ImageCardProps = React.ComponentProps<typeof Card> & {
 };
 
 type PredictedCardProps = ImageCardProps & {
-  confidence?: string;
-  modelClass?: string;
+  confidence?: string | number;
+  modelClass?: number | string;
 };
 
 export function ImageCard({
@@ -62,6 +62,12 @@ export function PredictedCard({
   // Show skeleton if explicitly loading or if no image URL is provided
   const shouldShowSkeleton = isLoading || !imageUrl;
 
+  // Format confidence if it's a number
+  const formattedConfidence =
+    typeof confidence === "number"
+      ? `${(confidence * 100).toFixed(2)}%`
+      : confidence;
+
   return (
     <Card
       className={cn("w-full overflow-hidden p-0 relative", className)}
@@ -80,16 +86,17 @@ export function PredictedCard({
 
             {/* Overlay for confidence and class */}
             <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 p-2 flex flex-col">
-              {confidence && (
+              {confidence !== undefined && confidence !== null && (
                 <div className="flex justify-between items-center">
                   <span className="text-white text-xs">Confidence:</span>
                   <Badge variant="secondary" className="ml-2">
-                    {confidence}
+                    {formattedConfidence}
                   </Badge>
                 </div>
               )}
 
-              {modelClass && (
+              {/* Fix for modelClass=0 being falsy - check if it's not undefined/null instead */}
+              {modelClass !== undefined && modelClass !== null && (
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-white text-xs">Class:</span>
                   <Badge variant="outline" className="ml-2 text-white">

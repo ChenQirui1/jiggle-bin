@@ -5,4 +5,4 @@ results_old/
 # weights/
 manual_test_images/
 
-
+__pycache__/

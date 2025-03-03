@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { VideoFeed } from "./components/VideoFeed";
+import { useState, useEffect, useRef } from "react";
 import { FinalVerdict } from "./components/FinalVerdict";
 import { ChooseModelCard } from "./components/ChooseModel";
-import { ImagePanel } from "./components/ImagePanel";
+import { ImagePanel, PredictionPanel } from "./components/ImagePanel";
 import { toast } from "sonner";
+import CameraStream from "./components/BackendFeed";
+import { VideoFeed } from "./components/VideoFeed";
+import { RemoteCameraFeed } from "./components/RemoteVideoFeed";
 
 function App() {
   const [triggerCapture, setTriggerCapture] = useState(false);
@@ -11,20 +13,51 @@ function App() {
   const [predictionImages, setPredictionImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("");
-  const [predictionResult, setPredictionResult] = useState({
-    confidence: "",
-    classLabel: "",
-  });
+  const [predictionResult, setPredictionResult] = useState([
+    {
+      filename: "frame_0.jpg",
+      confidence: "87%",
+      classLabel: "Unknown",
+    },
+  ]);
+  const [individualPredictions, setIndividualPredictions] = useState<
+    Array<{
+      confidence: string;
+      classLabel: string;
+    }>
+  >([]);
+
+  // Use this ref to prevent multiple calls to handleCapturedFrames
+  const processingFrames = useRef(false);
+
+  // Debug useEffect to monitor state changes
+  useEffect(() => {
+    console.log("Input images updated:", inputImages.length);
+  }, [inputImages]);
+
+  useEffect(() => {
+    console.log("Trigger capture:", triggerCapture);
+  }, [triggerCapture]);
+
+  useEffect(() => {
+    console.log("Prediction results updated:", predictionResult.length);
+  }, [predictionResult]);
 
   const handleCategorySubmit = (category) => {
     console.log("Selected category:", category);
     setSelectedModel(category);
+
+    // Reset images when starting a new capture
+    setInputImages([]);
+    setPredictionImages([]);
+    setIndividualPredictions([]);
 
     // Trigger video capture
     setTriggerCapture(true);
   };
 
   const sendImagesToServer = async (frames, modelType) => {
+    console.log("Sending frames to server:", frames.length);
     setIsLoading(true);
 
     try {
@@ -38,12 +71,11 @@ function App() {
       for (let i = 0; i < frames.length; i++) {
         const response = await fetch(frames[i]);
         const blob = await response.blob();
-        formData.append(`image_${i}`, blob, `frame_${i}.jpg`);
+        formData.append(`files`, blob, `frame_${i}.jpg`);
       }
 
       // Make API request
-      // Replace with your actual API endpoint
-      const apiUrl = "https://your-api-endpoint.com/predict";
+      const apiUrl = "http://localhost:8000/batch-predict";
 
       toast("Processing Images", {
         description: `Sending ${frames.length} frames to the server...`,
@@ -60,14 +92,34 @@ function App() {
         );
       }
 
-      const result = await response.json();
+      const data = await response.json();
+      console.log("Received prediction results:", data);
 
-      // Update UI with received images and prediction
-      setPredictionImages(result.processedImages || []);
-      setPredictionResult({
-        confidence: result.confidence || "87%", // Default for testing
-        classLabel: result.classLabel || selectedModel, // Default to selected model
-      });
+      // Fix for array length mismatch - ensure we have a prediction result for each image
+      // If data is an array, use it directly, otherwise wrap it in an array
+      const processedData = Array.isArray(data) ? data : [data];
+
+      // If we have fewer prediction results than images, duplicate the last one
+      // to ensure we have a prediction for each image
+      const expandedResults = data.results;
+      // while (expandedResults.length < frames.length) {
+      //   // If we have at least one result, duplicate the last one
+      //   if (expandedResults.length > 0) {
+      //     expandedResults.push({
+      //       ...expandedResults[expandedResults.length - 1],
+      //     });
+      //   } else {
+      //     // If we have no results, use a default one
+      //     expandedResults.push({
+      //       filename: `frame_${expandedResults.length}.jpg`,
+      //       confidence: "N/A",
+      //       classLabel: "No prediction available",
+      //     });
+      //   }
+      // }
+
+      setPredictionResult(expandedResults);
+      setPredictionImages(frames);
 
       toast("Processing Complete", {
         description: "Successfully received prediction results.",
@@ -77,35 +129,42 @@ function App() {
       toast("Error", {
         description: "Failed to process images. Please try again.",
       });
-
-      // For demo purposes - simulate receiving results
-      // Remove this in production
-      setTimeout(() => {
-        setPredictionImages(frames);
-        setPredictionResult({
-          confidence: "87%",
-          classLabel: selectedModel,
-        });
-      }, 1500);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCapturedFrames = async (frames) => {
-    console.log(`Captured ${frames.length} frames`);
+    // Prevent multiple calls
+    if (processingFrames.current) {
+      console.log("Already processing frames, ignoring this call");
+      return;
+    }
 
-    // Store captured frames as input images
-    setInputImages(frames);
+    processingFrames.current = true;
 
-    // Optional: save frames locally
-    // fileDownload(frames);
+    try {
+      console.log(`Captured ${frames?.length} frames`);
 
-    // Send to server for processing
-    await sendImagesToServer(frames, selectedModel);
+      // Reset the capture trigger immediately to prevent re-triggering
+      setTriggerCapture(false);
 
-    // Reset capture trigger
-    setTriggerCapture(false);
+      if (!frames || frames.length === 0) {
+        console.error("No frames captured");
+        toast.error("No frames captured. Please try again.");
+        return;
+      }
+
+      // Store captured frames as input images
+      setInputImages([...frames]);
+
+      // Then send to server for processing
+      await sendImagesToServer(frames, selectedModel);
+    } catch (error) {
+      console.error("Error in handleCapturedFrames:", error);
+    } finally {
+      processingFrames.current = false;
+    }
   };
 
   return (
@@ -118,14 +177,17 @@ function App() {
           <ImagePanel
             images={inputImages}
             count={5}
-            isLoading={triggerCapture}
+            isLoading={triggerCapture && inputImages.length === 0}
           />
 
-          <h1 className="text-l font-bold mb-4 text-center">Prediction</h1>
-          <ImagePanel
+          <h1 className="text-l font-bold mb-4 text-center mt-8">Prediction</h1>
+          <PredictionPanel
             images={predictionImages}
             count={5}
-            isLoading={isLoading && !triggerCapture}
+            isLoading={
+              isLoading || (triggerCapture && predictionImages.length === 0)
+            }
+            predictionResult={predictionResult}
           />
         </div>
 
@@ -136,25 +198,42 @@ function App() {
             framesCount={5}
             onFramesCaptured={handleCapturedFrames}
           />
+          {/* <RemoteCameraFeed
+            captureFrames={triggerCapture}
+            framesCount={5}
+            onFramesCaptured={handleCapturedFrames}
+          /> */}
+          {/* <CameraStream /> */}
         </div>
       </div>
 
       {/* Row 2: Action buttons */}
       <div className="grid grid-cols-3 gap-4">
         <div className="col-span-2 bg-gray-100 p-4 rounded-lg flex items-center justify-center">
+          {/* <FinalVerdict
+            imageUrl={predictionImages.length > 0 ? predictionImages[0] : null}
+          /> */}
           <FinalVerdict
-            confidence={predictionResult.confidence}
-            classLabel={predictionResult.classLabel}
-            imageUrl={predictionImages[0] || ""}
+            predictionResult={predictionResult}
+            imageUrl={predictionImages.length > 0 ? predictionImages[0] : null}
           />
         </div>
 
         <div className="bg-gray-100 p-4 rounded-lg flex items-center justify-center">
           <ChooseModelCard
             onSubmit={handleCategorySubmit}
-            disabled={triggerCapture || isLoading}
+            disabled={triggerCapture || isLoading || processingFrames.current}
           />
         </div>
+      </div>
+
+      {/* Debug information */}
+      <div className="fixed bottom-0 right-0 bg-gray-800 text-white p-2 text-xs opacity-70">
+        Input Images: {inputImages.length} | Prediction Images:{" "}
+        {predictionImages.length} | Prediction Results:{" "}
+        {predictionResult.length} | Trigger: {triggerCapture ? "true" : "false"}{" "}
+        | Loading: {isLoading ? "true" : "false"} | Processing:{" "}
+        {processingFrames.current ? "true" : "false"}
       </div>
     </div>
   );
