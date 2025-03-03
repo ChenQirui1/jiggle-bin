@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Identify</title>
+    <link rel="shortcut icon" href="#">
+</head>
+<body>
+    <h2>Identifty Recycling Image</h2>
+    <form action="http://127.0.0.1:8000/identify" method="post" enctype="multipart/form-data">
+        <!-- File input field -->
+        <label for="file">Choosen file will be identified:</label>
+        <input type="file" id="file" name="file" accept=".jpeg, .jpg">
+
+        <br><br>
+        
+        <!-- Submit button -->
+        <input type="submit" value="Upload">
+    </form>
+</body>
+</html>
