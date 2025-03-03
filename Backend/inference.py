@@ -166,11 +166,11 @@ def inference(image_path, model_path, gpu = None, output = "results"):
             if output:
                 filename = os.path.basename(image_path)
                 output_path = os.path.join(output, f"result_{filename}")
-                visualize_prediction(
-                    original_image, prediction, probability, output_path
-                )
+                #visualize_prediction(
+                #    original_image, prediction, probability, output_path
+                #)
             else:
-                visualize_prediction(original_image, prediction, probability)
+                #visualize_prediction(original_image, prediction, probability)
 
             print("-" * 50)
         except Exception as e:
