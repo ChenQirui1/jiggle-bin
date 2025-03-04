@@ -1,10 +1,9 @@
 
-
-Teamp OpenDeep, submission for NTU dlweek 2025
-
-🎉 Top 12 Teams, Best Freshman Team 🎉
+🎉 NTU dlweek 2025 Top 12 Teams, Best Freshman Team 🎉
 
 # Jiggle Bin: AI-Powered Household Recycling Bin
+
+*By Team OpenDeep*
 
 AI-powered simple smart bin for efficient household recycling and waste sorting
 
@@ -59,3 +58,4 @@ A major problem to recycling is the contamination of recyclables in household wa
 3. Current model focuses on general waste classification and may require further specialization for specific recycling categories
 
 More info can be found on the slide deck!
+
