@@ -3,9 +3,7 @@ import { FinalVerdict } from "./components/FinalVerdict";
 import { ChooseModelCard } from "./components/ChooseModel";
 import { ImagePanel, PredictionPanel } from "./components/ImagePanel";
 import { toast } from "sonner";
-import CameraStream from "./components/BackendFeed";
 import { VideoFeed } from "./components/VideoFeed";
-import { RemoteCameraFeed } from "./components/RemoteVideoFeed";
 
 function App() {
   const [triggerCapture, setTriggerCapture] = useState(false);

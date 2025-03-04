@@ -177,6 +177,7 @@ def inference(image_path, model_path, gpu = None, output = "results"):
             print(f"Error processing {image_path}: {e}")
 
     print("Inference completed!")
+    return {"prediction":int(prediction),"confidence":probability}
     
 
 def main():
