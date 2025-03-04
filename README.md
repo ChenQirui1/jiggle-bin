@@ -1,8 +1,10 @@
-# Jiggle Bin: AI-Powered Household Recycling Bin
 
-Team OpenDeep
+
+Teamp OpenDeep, submission for NTU dlweek 2025
 
 🎉 Top 12 Teams, Best Freshman Team 🎉
+
+# Jiggle Bin: AI-Powered Household Recycling Bin
 
 AI-powered simple smart bin for efficient household recycling and waste sorting
 
